@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createRuntimeClient } from '@taucad/runtime';
-import type { ExportResult, RuntimeClient } from '@taucad/runtime';
+import type { ExportResult } from '@taucad/runtime';
 import type { FileExtension, Geometry } from '@taucad/types';
 import { galleryRuntimeOptions } from './runtime-client.js';
 
 export type RuntimeGalleryProject = {
   readonly mainFile: string;
-  readonly source: string;
+  readonly files: Record<string, string | Uint8Array>;
   readonly parameters?: Record<string, unknown>;
 };
 
@@ -33,14 +33,19 @@ export type RenderedGeometryState = {
 };
 
 const emptyParameters: Record<string, unknown> = {};
+const renderTimeoutMs = 45_000;
 
 const exportUnavailable = async (): Promise<ExportResult> => ({
   success: false,
   issues: [{ message: 'Runtime client not initialized', code: 'RUNTIME', severity: 'error' }],
 });
 
+type RuntimeExportClient = {
+  readonly export: (format: FileExtension) => Promise<ExportResult>;
+};
+
 export function useRenderedGeometry(project: RuntimeGalleryProject | undefined): RenderedGeometryState {
-  const clientRef = useRef<RuntimeClient | undefined>(undefined);
+  const clientRef = useRef<RuntimeExportClient | undefined>(undefined);
   const [state, setState] = useState<RenderedGeometryState>({
     status: 'idle',
     geometry: undefined,
@@ -74,8 +79,38 @@ export function useRenderedGeometry(project: RuntimeGalleryProject | undefined):
 
     const client = createRuntimeClient(galleryRuntimeOptions);
     clientRef.current = client;
+    let active = true;
+    let renderTimeoutId: ReturnType<typeof globalThis.setTimeout> | undefined;
+    const clearRenderTimeout = (): void => {
+      if (renderTimeoutId !== undefined) {
+        globalThis.clearTimeout(renderTimeoutId);
+        renderTimeoutId = undefined;
+      }
+    };
+    const failRender = (error: Error): void => {
+      if (!active) {
+        return;
+      }
+
+      clearRenderTimeout();
+      active = false;
+      client.terminate();
+      if (clientRef.current === client) {
+        clientRef.current = undefined;
+      }
+      setState((current) => ({
+        ...current,
+        status: 'error',
+        geometry: undefined,
+        error,
+      }));
+    };
     const unsubscribers = [
       client.on('parametersResolved', (result) => {
+        if (!active) {
+          return;
+        }
+
         if (!result.success) {
           return;
         }
@@ -87,7 +122,12 @@ export function useRenderedGeometry(project: RuntimeGalleryProject | undefined):
         }));
       }),
       client.on('geometry', (result) => {
+        if (!active) {
+          return;
+        }
+
         if (result.success) {
+          clearRenderTimeout();
           setState((current) => ({
             ...current,
             status: 'success',
@@ -97,6 +137,7 @@ export function useRenderedGeometry(project: RuntimeGalleryProject | undefined):
           return;
         }
 
+        clearRenderTimeout();
         setState((current) => ({
           ...current,
           status: 'error',
@@ -105,6 +146,11 @@ export function useRenderedGeometry(project: RuntimeGalleryProject | undefined):
         }));
       }),
       client.on('error', (issues) => {
+        if (!active) {
+          return;
+        }
+
+        clearRenderTimeout();
         setState((current) => ({
           ...current,
           status: 'error',
@@ -123,13 +169,34 @@ export function useRenderedGeometry(project: RuntimeGalleryProject | undefined):
       exportGeometry,
     });
 
-    void client.openFile({
-      code: { [project.mainFile]: project.source },
-      file: project.mainFile,
-      parameters: project.parameters,
-    });
+    renderTimeoutId = globalThis.setTimeout(() => {
+      failRender(new Error(`Render timed out after ${Math.round(renderTimeoutMs / 1000)} seconds.`));
+    }, renderTimeoutMs);
+
+    void client
+      .openFile({
+        code: project.files as Record<string, string>,
+        file: project.mainFile,
+        parameters: project.parameters,
+      })
+      .then((outcome) => {
+        if (!active || !outcome.superseded) {
+          return;
+        }
+
+        setState((current) => ({
+          ...current,
+          status: 'idle',
+          geometry: undefined,
+        }));
+      })
+      .catch((error) => {
+        failRender(error instanceof Error ? error : new Error('Render failed.'));
+      });
 
     return () => {
+      active = false;
+      clearRenderTimeout();
       for (const unsubscribe of unsubscribers) {
         unsubscribe();
       }

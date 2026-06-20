@@ -10,12 +10,15 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "verify": "pnpm typecheck && pnpm build",
+    "projects:sync": "node scripts/sync-playground-projects.mjs",
+    "projects:check": "node scripts/check-project-assets.mjs",
     "version:write": "node scripts/write-version.mjs",
     "tau:check": "node scripts/check-tau-packages.mjs",
     "tau:update": "pnpm up @taucad/runtime@beta @taucad/types@beta && pnpm verify"
   },
   "dependencies": {
-    "@taucad/runtime": "0.1.0-beta.1",
+    "@taucad/openscad": "0.1.0-beta.0",
+    "@taucad/runtime": "0.1.0-beta.0",
     "@taucad/types": "0.1.0-beta.0",
     "buffer": "6.0.3",
     "react": "19.2.7",

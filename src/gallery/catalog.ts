@@ -7,11 +7,13 @@ export type GalleryProject = {
   readonly kernel: string;
   readonly entry: string;
   readonly sourceUrl: string;
+  readonly projectFiles: readonly string[];
   readonly modelUrl?: string;
-  readonly runtime?: 'replicad';
+  readonly runtime?: 'replicad' | 'openscad';
   readonly exportFormats?: readonly FileExtension[];
   readonly presets?: readonly GalleryPreset[];
   readonly initialParameters?: Record<string, unknown>;
+  readonly unsupportedReason?: string;
   readonly hidden: boolean;
 };
 
@@ -30,6 +32,9 @@ export const galleryProjects: readonly GalleryProject[] = [
     kernel: 'OpenSCAD',
     entry: 'main.scad',
     sourceUrl: assetUrl('projects/3d-rack-scad/main.scad'),
+    projectFiles: ['main.scad', 'presets.json', 'project.json'],
+    runtime: 'openscad',
+    exportFormats: ['glb', 'gltf'],
     hidden: false,
   },
   {
@@ -39,6 +44,7 @@ export const galleryProjects: readonly GalleryProject[] = [
     kernel: 'Static',
     entry: 'atmospheric-sampler.glb',
     sourceUrl: assetUrl('projects/atmospheric-sampler/atmospheric-sampler.glb'),
+    projectFiles: ['atmospheric-sampler.glb', 'project.json'],
     modelUrl: assetUrl('projects/atmospheric-sampler/atmospheric-sampler.glb'),
     hidden: false,
   },
@@ -49,6 +55,9 @@ export const galleryProjects: readonly GalleryProject[] = [
     kernel: 'OpenSCAD',
     entry: 'main.scad',
     sourceUrl: assetUrl('projects/keyguard-with-raised-tabs/main.scad'),
+    projectFiles: ['main.scad', 'openings_and_additions.txt', 'presets.json', 'project.json'],
+    runtime: 'openscad',
+    exportFormats: ['glb', 'gltf'],
     hidden: false,
   },
   {
@@ -58,6 +67,9 @@ export const galleryProjects: readonly GalleryProject[] = [
     kernel: 'OpenSCAD',
     entry: 'main.scad',
     sourceUrl: assetUrl('projects/networking/main.scad'),
+    projectFiles: ['main.scad', 'project.json'],
+    runtime: 'openscad',
+    exportFormats: ['glb', 'gltf'],
     hidden: false,
   },
   {
@@ -68,6 +80,9 @@ export const galleryProjects: readonly GalleryProject[] = [
     kernel: 'OpenSCAD',
     entry: 'main.scad',
     sourceUrl: assetUrl('projects/parametric-gel-comb/main.scad'),
+    projectFiles: ['main.scad', 'project.json'],
+    runtime: 'openscad',
+    exportFormats: ['glb', 'gltf'],
     hidden: false,
   },
   {
@@ -77,6 +92,9 @@ export const galleryProjects: readonly GalleryProject[] = [
     kernel: 'OpenSCAD',
     entry: 'Main.scad',
     sourceUrl: assetUrl('projects/pendant-lamp/Main.scad'),
+    projectFiles: ['Main.scad', 'presets.json', 'project.json'],
+    runtime: 'openscad',
+    exportFormats: ['glb', 'gltf'],
     hidden: false,
   },
   {
@@ -86,6 +104,9 @@ export const galleryProjects: readonly GalleryProject[] = [
     kernel: 'OpenSCAD',
     entry: 'main.scad',
     sourceUrl: assetUrl('projects/periodic-table/main.scad'),
+    projectFiles: ['main.scad', 'presets.json', 'project.json'],
+    runtime: 'openscad',
+    exportFormats: ['glb', 'gltf'],
     hidden: false,
   },
   {
@@ -96,6 +117,7 @@ export const galleryProjects: readonly GalleryProject[] = [
     kernel: 'Replicad',
     entry: 'main.ts',
     sourceUrl: assetUrl('projects/pet-bottle-opener/main.ts'),
+    projectFiles: ['main.ts', 'presets.json', 'project.json'],
     runtime: 'replicad',
     exportFormats: ['glb', 'stl', '3mf', 'step'],
     initialParameters: {
@@ -138,6 +160,9 @@ export const galleryProjects: readonly GalleryProject[] = [
     kernel: 'OpenSCAD',
     entry: 'prechamber_nozzle_insert_BOSL2_threads.scad',
     sourceUrl: assetUrl('projects/pre-chamber-nozzle-insert/prechamber_nozzle_insert_BOSL2_threads.scad'),
+    projectFiles: ['prechamber_nozzle_insert_BOSL2_threads.scad', 'project.json'],
+    runtime: 'openscad',
+    exportFormats: ['glb', 'gltf'],
     hidden: false,
   },
   {
@@ -147,6 +172,8 @@ export const galleryProjects: readonly GalleryProject[] = [
     kernel: 'OpenSCAD',
     entry: 'main.scad',
     sourceUrl: assetUrl('projects/saboteur-card-holder/main.scad'),
+    projectFiles: ['main.scad', 'project.json'],
+    unsupportedReason: 'This upstream project includes grid.scad, but that file is not present in the Tau playground source tree.',
     hidden: false,
   },
   {
@@ -156,6 +183,9 @@ export const galleryProjects: readonly GalleryProject[] = [
     kernel: 'OpenSCAD',
     entry: 'Main.scad',
     sourceUrl: assetUrl('projects/stamp/Main.scad'),
+    projectFiles: ['Main.scad', 'project.json', 'stamp_template_handle.stl', 'stamp_template_knub.stl', 'yaa.svg'],
+    runtime: 'openscad',
+    exportFormats: ['glb', 'gltf'],
     hidden: false,
   },
   {
@@ -165,6 +195,9 @@ export const galleryProjects: readonly GalleryProject[] = [
     kernel: 'OpenSCAD',
     entry: 'main.scad',
     sourceUrl: assetUrl('projects/tray-scad/main.scad'),
+    projectFiles: ['main.scad', 'project.json'],
+    unsupportedReason:
+      'This upstream project includes Untitled-1.scad, but that file is not present in the Tau playground source tree.',
     hidden: false,
   },
   {
@@ -174,6 +207,9 @@ export const galleryProjects: readonly GalleryProject[] = [
     kernel: 'OpenSCAD',
     entry: 'main.scad',
     sourceUrl: assetUrl('projects/vane-trap/main.scad'),
+    projectFiles: ['main.scad', 'presets.json', 'project.json'],
+    runtime: 'openscad',
+    exportFormats: ['glb', 'gltf'],
     hidden: false,
   },
   {
@@ -183,6 +219,9 @@ export const galleryProjects: readonly GalleryProject[] = [
     kernel: 'OpenSCAD',
     entry: 'main.scad',
     sourceUrl: assetUrl('projects/wham/main.scad'),
+    projectFiles: ['main.scad', 'project.json'],
+    unsupportedReason:
+      'This upstream project includes Untitled-1.scad, but that file is not present in the Tau playground source tree.',
     hidden: true,
   },
 ];

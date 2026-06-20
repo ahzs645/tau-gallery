@@ -20,19 +20,20 @@ export function App(): React.JSX.Element {
   const [exportingFormat, setExportingFormat] = useState<FileExtension | undefined>();
   const [actionError, setActionError] = useState<Error | undefined>();
   const [renderRequested, setRenderRequested] = useState(false);
+  const [renderRevision, setRenderRevision] = useState(0);
   const activeProject = visibleProjects.find((project) => project.id === activeProjectId) ?? visibleProjects[0];
   const sourceState = useProjectSource(activeProject);
   const presetState = useProjectPresets(activeProject);
   const runtimeProject = useMemo(
     () =>
-      activeProject?.runtime && sourceState.source && renderRequested
+      activeProject?.runtime && sourceState.files && renderRequested
         ? {
             mainFile: activeProject.entry,
-            source: sourceState.source,
+            files: sourceState.files,
             parameters,
           }
         : undefined,
-    [activeProject, sourceState.source, parameters, renderRequested],
+    [activeProject, sourceState.files, parameters, renderRequested, renderRevision],
   );
   const runtimeState = useRenderedGeometry(runtimeProject);
   const staticState = useStaticGeometry(activeProject?.runtime ? undefined : activeProject);
@@ -49,6 +50,7 @@ export function App(): React.JSX.Element {
   useEffect(() => {
     setParameters(activeProject?.initialParameters ?? {});
     setRenderRequested(false);
+    setRenderRevision(0);
     setActionError(undefined);
   }, [activeProject]);
 
@@ -88,7 +90,7 @@ export function App(): React.JSX.Element {
               }}
             >
               <span>{project.name}</span>
-              <small>{project.modelUrl ? project.kernel : 'Source only'}</small>
+              <small>{project.runtime ? `${project.kernel} runtime` : project.modelUrl ? project.kernel : 'Source only'}</small>
             </button>
           ))}
         </div>
@@ -113,7 +115,9 @@ export function App(): React.JSX.Element {
                 : 'ready'
               : activeProject?.modelUrl
                 ? renderState.status
-                : 'preview pending'}
+                : activeProject?.unsupportedReason
+                  ? 'unsupported'
+                  : 'source only'}
           </span>
         </header>
 
@@ -128,7 +132,7 @@ export function App(): React.JSX.Element {
             <div className="message">
               <div>
                 <strong>Runtime preview is ready</strong>
-                <p>Use the render action to generate a live preview and enable runtime exports.</p>
+                <p>Use Render preview to generate live geometry and enable runtime exports.</p>
               </div>
             </div>
           ) : null}
@@ -139,7 +143,7 @@ export function App(): React.JSX.Element {
             <div className="message">
               <div>
                 <strong>Preview not generated yet</strong>
-                <p>This project has been imported from Tau playground source, but no static GLB is committed yet.</p>
+                <p>{activeProject.unsupportedReason ?? 'This project has Tau playground source but no runtime or static GLB preview yet.'}</p>
                 {activeProject ? <a href={activeProject.sourceUrl}>Open source file</a> : null}
               </div>
             </div>
@@ -157,12 +161,18 @@ export function App(): React.JSX.Element {
             {activeProject?.runtime ? (
               <button
                 type="button"
-                disabled={!sourceState.source || runtimeState.status === 'loading'}
+                disabled={!sourceState.files && runtimeState.status !== 'loading'}
                 onClick={() => {
+                  if (runtimeState.status === 'loading') {
+                    setRenderRequested(false);
+                    return;
+                  }
+
+                  setRenderRevision((revision) => revision + 1);
                   setRenderRequested(true);
                 }}
               >
-                {runtimeState.status === 'loading' ? 'Rendering...' : 'Render preview'}
+                {runtimeState.status === 'loading' ? 'Cancel render' : renderState.geometry ? 'Render again' : 'Render preview'}
               </button>
             ) : null}
             {exportFormats.map((format) => (
@@ -239,8 +249,10 @@ export function App(): React.JSX.Element {
                 />
               ) : null}
               <p className="inspector-note">
-                This project is source-only in the gallery. Live parameter editing needs the matching Tau kernel bundled
-                into this app.
+                {activeProject?.unsupportedReason ??
+                  (activeProject?.modelUrl
+                    ? 'This project uses a committed static preview. Live parameter editing is not available for static GLB assets.'
+                    : 'This project is source-only in the gallery. Live parameter editing needs a compatible Tau runtime path or a committed preview artifact.')}
               </p>
             </>
           )}

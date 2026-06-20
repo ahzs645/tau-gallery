@@ -115,13 +115,20 @@ h2 {
   cursor: pointer;
 }
 
+.project-card span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .project-card.active {
   border-color: #285f56;
   background: #e8f3ef;
 }
 
 .project-card small {
+  flex: 0 0 auto;
   color: #66685d;
+  text-align: right;
 }
 
 .viewer-panel {
@@ -139,9 +146,14 @@ h2 {
   padding: 20px 24px;
 }
 
+.viewer-header > div {
+  min-width: 0;
+}
+
 .viewer-header p:last-child {
   margin-top: 8px;
   color: #66685d;
+  line-height: 1.5;
 }
 
 .source-link {
@@ -158,6 +170,7 @@ h2 {
 }
 
 .status {
+  flex: 0 0 auto;
   border-radius: 4px;
   background: #ecece3;
   padding: 6px 8px;
@@ -220,6 +233,7 @@ h2 {
   color: #20201c;
   padding: 8px 10px;
   text-decoration: none;
+  overflow-wrap: anywhere;
   cursor: pointer;
 }
 
@@ -299,6 +313,7 @@ h2 {
 
 .parameter-field input,
 .parameter-field select {
+  width: 100%;
   min-width: 0;
   border: 1px solid #deded4;
   border-radius: 4px;
@@ -361,6 +376,11 @@ h2 {
 
   .viewer-header {
     flex-direction: column;
+  }
+
+  .model-canvas {
+    height: 60dvh;
+    min-height: 360px;
   }
 
   .inspector {
