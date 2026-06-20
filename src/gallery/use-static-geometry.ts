@@ -21,12 +21,18 @@ export function useStaticGeometry(project: GalleryProject | undefined): StaticGe
       return;
     }
 
+    const modelUrl = project.modelUrl;
+    if (!modelUrl) {
+      setState({ status: 'idle', geometry: undefined, error: undefined });
+      return;
+    }
+
     const controller = new AbortController();
     setState({ status: 'loading', geometry: undefined, error: undefined });
 
     void (async () => {
       try {
-        const response = await fetch(project.modelUrl, { signal: controller.signal });
+        const response = await fetch(modelUrl, { signal: controller.signal });
         if (!response.ok) {
           throw new Error(`Failed to load static model: ${response.status}`);
         }
@@ -37,7 +43,7 @@ export function useStaticGeometry(project: GalleryProject | undefined): StaticGe
           geometry: {
             format: 'gltf',
             content,
-            hash: `static:${project.modelUrl}`,
+            hash: `static:${modelUrl}`,
           },
           error: undefined,
         });

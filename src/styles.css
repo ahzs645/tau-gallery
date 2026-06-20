@@ -60,9 +60,17 @@ h2 {
   line-height: 1.1;
 }
 
+.sidebar-note {
+  margin-top: 12px;
+  color: #66685d;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .project-list {
   display: grid;
   gap: 8px;
+  overflow: auto;
 }
 
 .project-card {
@@ -109,6 +117,19 @@ h2 {
   color: #66685d;
 }
 
+.source-link {
+  display: inline-flex;
+  margin-top: 10px;
+  color: #285f56;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.source-link:hover {
+  text-decoration: underline;
+}
+
 .status {
   border-radius: 4px;
   background: #ecece3;
@@ -147,6 +168,23 @@ h2 {
   place-items: center;
   padding: 24px;
   color: #66685d;
+  text-align: center;
+}
+
+.message strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #20201c;
+}
+
+.message p {
+  max-width: 420px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.message a {
+  color: #285f56;
 }
 
 .message.error {
