@@ -38,6 +38,16 @@ const exportUnavailable = async (): Promise<ExportResult> => ({
   issues: [{ message: 'Runtime client not initialized', code: 'RUNTIME', severity: 'error' }],
 });
 
+function normalizeRuntimeError(error: Error): Error {
+  if (error.message.includes('SharedArrayBuffer')) {
+    return new Error(
+      'Live runtime rendering requires cross-origin isolation, but SharedArrayBuffer is unavailable on this static host.',
+    );
+  }
+
+  return error;
+}
+
 type RuntimeExportClient = {
   readonly export: (format: FileExtension) => Promise<ExportResult>;
 };
@@ -232,7 +242,7 @@ export function useRenderedGeometry(project: RuntimeGalleryProject | undefined):
           geometry: undefined,
         }));
       } catch (error) {
-        failRender(error instanceof Error ? error : new Error('Render failed.'));
+        failRender(normalizeRuntimeError(error instanceof Error ? error : new Error('Render failed.')));
       }
     })();
 
