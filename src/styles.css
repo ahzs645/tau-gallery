@@ -23,7 +23,7 @@ select {
 .app-shell {
   display: grid;
   min-height: 100dvh;
-  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr) minmax(280px, 360px);
 }
 
 .update-banner {
@@ -176,6 +176,137 @@ h2 {
   color: #8a1f1f;
 }
 
+.inspector {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 20px;
+  overflow: auto;
+  border-left: 1px solid #deded4;
+  background: #ffffff;
+  padding: 24px;
+}
+
+.inspector-section {
+  display: grid;
+  gap: 14px;
+}
+
+.inspector-section h3 {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.parameters-section {
+  min-height: 0;
+}
+
+.action-list {
+  display: grid;
+  gap: 8px;
+}
+
+.action-list button,
+.control-link,
+.preset-list button {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #deded4;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #20201c;
+  padding: 8px 10px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.action-list button:not(:disabled):hover,
+.control-link:hover,
+.preset-list button:hover {
+  border-color: #285f56;
+}
+
+.action-list button:disabled {
+  color: #8a8b82;
+  cursor: not-allowed;
+}
+
+.inspector-note,
+.inspector-error {
+  color: #66685d;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.inspector-error {
+  color: #8a1f1f;
+}
+
+.parameter-panel {
+  display: grid;
+  min-height: 0;
+  gap: 14px;
+}
+
+.preset-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.preset-list button {
+  min-height: 30px;
+  justify-content: flex-start;
+  font-size: 12px;
+}
+
+.parameter-groups {
+  display: grid;
+  gap: 12px;
+}
+
+.parameter-group {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  border: 1px solid #deded4;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.parameter-group legend {
+  padding: 0 4px;
+  color: #3f4039;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.parameter-field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  color: #3f4039;
+  font-size: 13px;
+}
+
+.parameter-field.checkbox {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.parameter-field input,
+.parameter-field select {
+  min-width: 0;
+  border: 1px solid #deded4;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #20201c;
+  padding: 7px 8px;
+}
+
 .canvas-frame {
   position: relative;
   min-height: 0;
@@ -230,5 +361,10 @@ h2 {
 
   .viewer-header {
     flex-direction: column;
+  }
+
+  .inspector {
+    border-left: 0;
+    border-top: 1px solid #deded4;
   }
 }

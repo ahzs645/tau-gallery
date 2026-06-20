@@ -1,3 +1,5 @@
+import type { FileExtension } from '@taucad/types';
+
 export type GalleryProject = {
   readonly id: string;
   readonly name: string;
@@ -6,7 +8,16 @@ export type GalleryProject = {
   readonly entry: string;
   readonly sourceUrl: string;
   readonly modelUrl?: string;
+  readonly runtime?: 'replicad';
+  readonly exportFormats?: readonly FileExtension[];
+  readonly presets?: readonly GalleryPreset[];
+  readonly initialParameters?: Record<string, unknown>;
   readonly hidden: boolean;
+};
+
+export type GalleryPreset = {
+  readonly name: string;
+  readonly parameters: Record<string, unknown>;
 };
 
 const assetUrl = (path: string): string => `${import.meta.env.BASE_URL}${path}`;
@@ -85,6 +96,38 @@ export const galleryProjects: readonly GalleryProject[] = [
     kernel: 'Replicad',
     entry: 'main.ts',
     sourceUrl: assetUrl('projects/pet-bottle-opener/main.ts'),
+    runtime: 'replicad',
+    exportFormats: ['glb', 'stl', '3mf', 'step'],
+    initialParameters: {
+      lower: { module: 'none' },
+    },
+    presets: [
+      { name: 'Thick release (22 mm)', parameters: { body: { thickness: 22 }, lower: { module: 'none' } } },
+      { name: 'Thin release (14 mm)', parameters: { body: { thickness: 14 }, lower: { module: 'none' } } },
+      { name: 'Extra-thin release (10 mm)', parameters: { body: { thickness: 10 }, lower: { module: 'none' } } },
+      {
+        name: 'Thin handle',
+        parameters: {
+          body: { thickness: 14 },
+          lower: { module: 'handle', handleHoleDiameter: 25, handleOuterRadius: 17.5 },
+        },
+      },
+      {
+        name: 'Dual opener (smaller)',
+        parameters: {
+          body: { thickness: 14 },
+          lower: { module: 'opener', openerSize: 'smaller', secondCapDiameter: 19, centerDistance: 63 },
+        },
+      },
+      {
+        name: 'Dual opener (same)',
+        parameters: {
+          body: { thickness: 14 },
+          lower: { module: 'opener', openerSize: 'same', centerDistance: 68 },
+        },
+      },
+      { name: 'Round rim', parameters: { body: { outerSides: 64 } } },
+    ],
     hidden: false,
   },
   {
