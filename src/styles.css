@@ -26,6 +26,33 @@ select {
   grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
 }
 
+.update-banner {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  max-width: calc(100dvw - 32px);
+  gap: 12px;
+  border: 1px solid #c9d9d3;
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: 0 18px 40px rgb(32 32 28 / 16%);
+  padding: 10px 12px;
+  color: #20201c;
+  font-size: 13px;
+}
+
+.update-banner button {
+  border: 0;
+  border-radius: 4px;
+  background: #285f56;
+  color: #ffffff;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
 .sidebar {
   display: flex;
   flex-direction: column;

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { galleryProjects } from './gallery/catalog.js';
 import { useStaticGeometry } from './gallery/use-static-geometry.js';
+import { useVersionCheck } from './use-version-check.js';
 import { ModelCanvas } from './viewer/model-canvas.js';
 
 export function App(): React.JSX.Element {
@@ -9,9 +10,24 @@ export function App(): React.JSX.Element {
   const activeProject = visibleProjects.find((project) => project.id === activeProjectId) ?? visibleProjects[0];
   const renderState = useStaticGeometry(activeProject);
   const staticProjectCount = visibleProjects.filter((project) => project.modelUrl).length;
+  const latestVersion = useVersionCheck();
 
   return (
     <main className="app-shell">
+      {latestVersion ? (
+        <div className="update-banner" role="status">
+          <span>New gallery version available.</span>
+          <button
+            type="button"
+            onClick={() => {
+              globalThis.location.reload();
+            }}
+          >
+            Refresh
+          </button>
+        </div>
+      ) : null}
+
       <aside className="sidebar" aria-label="Gallery models">
         <div>
           <p className="eyebrow">Tau Gallery</p>

@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "verify": "pnpm typecheck && pnpm build",
+    "version:write": "node scripts/write-version.mjs",
     "tau:check": "node scripts/check-tau-packages.mjs",
     "tau:update": "pnpm up @taucad/runtime@beta @taucad/types@beta && pnpm verify"
   },
