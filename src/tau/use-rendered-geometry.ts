@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { createRuntimeClient } from '@taucad/runtime';
 import type { ExportResult } from '@taucad/runtime';
 import type { FileExtension, Geometry } from '@taucad/types';
-import { galleryRuntimeOptions } from './runtime-client.js';
 
 export type RuntimeGalleryProject = {
   readonly mainFile: string;
@@ -44,6 +42,16 @@ type RuntimeExportClient = {
   readonly export: (format: FileExtension) => Promise<ExportResult>;
 };
 
+type RuntimeClientLike = RuntimeExportClient & {
+  readonly openFile: (input: {
+    readonly code: Record<string, string>;
+    readonly file: string;
+    readonly parameters?: Record<string, unknown>;
+  }) => Promise<{ readonly superseded: boolean }>;
+  readonly on: (event: string, handler: (...args: unknown[]) => void) => () => void;
+  readonly terminate: () => void;
+};
+
 export function useRenderedGeometry(project: RuntimeGalleryProject | undefined): RenderedGeometryState {
   const clientRef = useRef<RuntimeExportClient | undefined>(undefined);
   const [state, setState] = useState<RenderedGeometryState>({
@@ -77,9 +85,9 @@ export function useRenderedGeometry(project: RuntimeGalleryProject | undefined):
       return;
     }
 
-    const client = createRuntimeClient(galleryRuntimeOptions);
-    clientRef.current = client;
     let active = true;
+    let client: RuntimeClientLike | undefined;
+    const unsubscribers: Array<() => void> = [];
     let renderTimeoutId: ReturnType<typeof globalThis.setTimeout> | undefined;
     const clearRenderTimeout = (): void => {
       if (renderTimeoutId !== undefined) {
@@ -94,7 +102,7 @@ export function useRenderedGeometry(project: RuntimeGalleryProject | undefined):
 
       clearRenderTimeout();
       active = false;
-      client.terminate();
+      client?.terminate();
       if (clientRef.current === client) {
         clientRef.current = undefined;
       }
@@ -105,23 +113,39 @@ export function useRenderedGeometry(project: RuntimeGalleryProject | undefined):
         error,
       }));
     };
-    const unsubscribers = [
-      client.on('parametersResolved', (result) => {
+
+    const onParametersResolved = (result: {
+      readonly success: boolean;
+      readonly data?: {
+        readonly defaultParameters: Record<string, unknown>;
+        readonly jsonSchema: unknown;
+      };
+    }): void => {
         if (!active) {
           return;
         }
 
-        if (!result.success) {
+        if (!result.success || !result.data) {
+          return;
+        }
+
+        const data = result.data;
+        if (!data) {
           return;
         }
 
         setState((current) => ({
           ...current,
-          defaultParameters: result.data.defaultParameters,
-          jsonSchema: result.data.jsonSchema as JsonSchema,
+          defaultParameters: data.defaultParameters,
+          jsonSchema: data.jsonSchema as JsonSchema,
         }));
-      }),
-      client.on('geometry', (result) => {
+      };
+
+    const onGeometry = (result: {
+      readonly success: boolean;
+      readonly data?: readonly Geometry[];
+      readonly issues?: readonly { readonly message?: string }[];
+    }): void => {
         if (!active) {
           return;
         }
@@ -131,7 +155,7 @@ export function useRenderedGeometry(project: RuntimeGalleryProject | undefined):
           setState((current) => ({
             ...current,
             status: 'success',
-            geometry: result.data.find((geometry) => geometry.format === 'gltf'),
+            geometry: result.data?.find((geometry) => geometry.format === 'gltf'),
             error: undefined,
           }));
           return;
@@ -142,10 +166,11 @@ export function useRenderedGeometry(project: RuntimeGalleryProject | undefined):
           ...current,
           status: 'error',
           geometry: undefined,
-          error: new Error(result.issues[0]?.message ?? 'Render failed'),
+          error: new Error(result.issues?.[0]?.message ?? 'Render failed'),
         }));
-      }),
-      client.on('error', (issues) => {
+      };
+
+    const onError = (issues: readonly { readonly message?: string }[]): void => {
         if (!active) {
           return;
         }
@@ -157,8 +182,7 @@ export function useRenderedGeometry(project: RuntimeGalleryProject | undefined):
           geometry: undefined,
           error: new Error(issues[0]?.message ?? 'Render failed'),
         }));
-      }),
-    ];
+      };
 
     setState({
       status: 'loading',
@@ -173,13 +197,31 @@ export function useRenderedGeometry(project: RuntimeGalleryProject | undefined):
       failRender(new Error(`Render timed out after ${Math.round(renderTimeoutMs / 1000)} seconds.`));
     }, renderTimeoutMs);
 
-    void client
-      .openFile({
-        code: project.files as Record<string, string>,
-        file: project.mainFile,
-        parameters: project.parameters,
-      })
-      .then((outcome) => {
+    void (async () => {
+      try {
+        const [{ createRuntimeClient }, { galleryRuntimeOptions }] = await Promise.all([
+          import('@taucad/runtime'),
+          import('./runtime-client.js'),
+        ]);
+        if (!active) {
+          return;
+        }
+
+        const runtimeClient = createRuntimeClient(galleryRuntimeOptions) as unknown as RuntimeClientLike;
+        client = runtimeClient;
+        clientRef.current = runtimeClient;
+        unsubscribers.push(
+          runtimeClient.on('parametersResolved', onParametersResolved as (...args: unknown[]) => void),
+          runtimeClient.on('geometry', onGeometry as (...args: unknown[]) => void),
+          runtimeClient.on('error', onError as (...args: unknown[]) => void),
+        );
+
+        const outcome = await runtimeClient.openFile({
+          code: project.files as Record<string, string>,
+          file: project.mainFile,
+          parameters: project.parameters,
+        });
+
         if (!active || !outcome.superseded) {
           return;
         }
@@ -189,10 +231,10 @@ export function useRenderedGeometry(project: RuntimeGalleryProject | undefined):
           status: 'idle',
           geometry: undefined,
         }));
-      })
-      .catch((error) => {
+      } catch (error) {
         failRender(error instanceof Error ? error : new Error('Render failed.'));
-      });
+      }
+    })();
 
     return () => {
       active = false;
@@ -200,7 +242,7 @@ export function useRenderedGeometry(project: RuntimeGalleryProject | undefined):
       for (const unsubscribe of unsubscribers) {
         unsubscribe();
       }
-      client.terminate();
+      client?.terminate();
       if (clientRef.current === client) {
         clientRef.current = undefined;
       }
